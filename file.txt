@@ -1,0 +1,472 @@
+HTTP/1.1 200 OK
+Cache-Control: max-age=604800
+Content-Length: 16141
+Content-Type: text/html
+Last-Modified: Tue, 31 Jan 2017 22:34:43 GMT
+Accept-Ranges: bytes
+ETag: "80c38637127cd21:0"
+Server: Microsoft-IIS/8.0
+X-Powered-By: ASP.NET
+Set-Cookie: ARRAffinity=188ba0f7a09833644e652753b175cbd6bda3118865a9bbe07fdabdcd24610ace;Path=/;Domain=lamport.azurewebsites.net
+Date: Mon, 20 Mar 2017 15:38:14 GMT
+
+<HTML>
+<HEAD>
+   <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+  <STYLE type="text/css">
+   H2 {line-height:45px; margin-bottom:0px; text-align: left; font-size:26px;
+       color:#000000}
+   H3 {line-height:10px; margin-bottom:8px; text-align: left}
+   UL {margin-top:-10px}
+   .smallpar {margin-top: 7px} 
+ </STYLE>
+
+<!-- line-height -->
+</HEAD>
+<BODY BGCOLOR=#ffffe4>
+
+<table width="650">
+<font style="font-family:Calibri,Trebuchet MS,Verdana">
+<title>The TLA Home Page
+</title>
+<H1>The TLA Home Page</H1>
+<I>Last modified  12 November 2016</I>
+
+<HR>
+
+<p style="margin-top:-30px">&nbsp;</p>
+
+<h2><a href="correction.html"><font color="red">A Correction</font></a></h2>
+
+<h2>Contents</h2>
+   &nbsp; &nbsp; <a href="tla-intro.html">What is TLA?</a><br>
+   &nbsp; &nbsp; <a href="#news">News</a><br>
+   &nbsp; &nbsp; <a href="#community">The TLA+ Google Group</a><br>
+   &nbsp; &nbsp; <a href="#tools">The TLA T
+ools</a><br>
+   &nbsp; &nbsp; <a href="#learning">Resources for Learning About TLA</a>
+
+<p style="margin-top:-10px">&nbsp;</p>
+
+<h2><a name = "intro">What is TLA?</a></h2>
+<A HREF="tla-intro.html"><font size=+1>Click here to find out.</font></A>
+
+<p style="margin-top:-10px">&nbsp;</p>
+
+<h2>News</h2>
+<!--
+<font size=-1>
+   &nbsp; &nbsp; <a href="#webpage">New Web Site </a><br>
+   &nbsp; &nbsp; <a href="#workshop">The TLA+ Workshop</a><br>
+   &nbsp; &nbsp; <a href="#newversions">Coming Attractions</a><br>
+</font>
+-->
+
+<p style="margin-top:-27px">&nbsp;</p>
+
+<h3>TLA+ Use at Amazon</h3>
+
+A technical report describing TLA+ use at Amazon is available
+<a href="amazon.html">here</a>.
+
+<h3><a name="open-source">TLA+ Tools Now an Open-Source Project</h3>
+
+The TLA+ Toolbox and the TLA+ Tools have been released as an open-source
+project, under the <A HREF="license.html">MIT License</A>.&nbsp;  The
+source code is available on 
+<a href="http://tlaplus.codeplex.com">CodePlex</a>.&nbsp; 
+The executable files for the Toolbox are available from a new site
+accessible by a link on <a href="toolbox.html#downloading">the
+Toolbox's web page</a>. 
+
+The stand-alone versions of the TLA+ Tools can be obtained through a
+new link on <a href="tools.html#downloading">the
+TLA+ Tools web page</a>.
+
+
+
+<!--
+<h3><a name="webpage">New Web Site &nbsp;<font size=-1>[21 September 2012]</font></a></h3>
+
+The <a href="http://tlaplus.net"><code>tlaplus.net</code> web site</a>
+is under reconstruction.&nbsp;  For now, it has been replaced by the web
+site you are now visiting, and its Forum has been replaced by the
+Google group described <a href="#community">below</a>.
+
+<h3><a name="workshop">The TLA+ Workshop &nbsp;<font size=-1>[21 September 2012]</font></a></h3>
+
+A TLA+ workshop was held in Paris on 27 August 2012 in conjunction
+with the <A href="http://fm2012.cnam.fr/">FM 2012 conference</a>.
+We have posted the
+<A href="http://tla2012.loria.fr/program.html">slides 
+  of talks and submitted papers</A>.
+
+<h3><a name="newversions">Coming Attractions &nbsp;<font size=-1>[21 September 2012]</font></a></h3>
+
+The next release of the Toolbox will include syntax coloring of
+PlusCal algorithms and proper pretty printing of the algorithms.&nbsp;  It
+will also have significant improvements to the distributed version of
+the TLC model checker.&nbsp;  Enormous speeedups should be possible by
+running TLC on a network of dozens or hundreds of computers. 
+
+<p class = "smallpar">
+Improvements to the SMT solver backends will greatly enhance the
+power of TLAPS, making proofs much easier to 
+write.
+-->
+
+<h2><a name="community">The TLA+ Google Group</a></h2>
+You can use <A HREF=
+   "https://groups.google.com/forum/?fromgroups#!forum/tlaplus">the TLA+ 
+   Google group</A> 
+to communicate with members of the TLA+ community, including the
+maintainers of the tools.&nbsp;  Post a message if you have a question, want
+to report a bug, or just want to tell us what you're doing with TLA+.
+The easiest way to post a message is to send email to 
+<code>x@googlegroups.com</code> where <code>x</code> should be replaced
+by <code>tlaplus</code>.&nbsp;  
+
+
+
+<h2><a name="tools">The TLA Tools</a></h2>
+
+<!-- 
+<BR>&nbsp;<a name="tools"><font size=+2><b>The TLA Tools</b></font>
+  <sub><font size=+6>&nbsp;</font></sub><BR>
+-->
+
+The TLA+ tools are: the SANY parser, the TLC model checker, the
+PlusCal translator, the TLATeX pretty printer, and the TLAPS proof
+system.&nbsp;  These tools are all used from <a href="toolbox.html">the TLA
+Toolbox</a>, an IDE (integrated development environment).&nbsp;  Downloading
+the Toolbox downloads all the tools except for TLAPS, which must
+be downloaded separately from 
+ <A HREF="http://tla.msr-inria.inria.fr/tlaps">
+       the TLAPS web site</A>.&nbsp;
+The tools can also be downloaded without the Toolbox to be used from a
+command line, as described <a href="tools.html">here</a> (for all
+tools except TLAPS)
+.  
+&nbsp; 
+
+Some limitations of the tools and some enhancements to them are
+described only <a href="current-tools.pdf">here</a>.
+
+<h2><a name="learning">Resources for Learning About TLA</a></h2> 
+
+<!--
+<BR>&nbsp;<BR><a name="tools"><font size=+2><b>Resources for Learning About TLA</b></font>
+-->
+
+<UL> <LI><A HREF="hyperbook.html"><B>The TLA+ Hyperbook</B></A>&nbsp;&nbsp; 
+
+This is a work in progress that is far from complete.&nbsp;  However, the
+parts that are are written provide the best introduction to TLA+ and
+the tools, as well as being a good way to get started learning
+PlusCal.&nbsp;  It also has a brief introduction to the TLAPS proof system.
+
+
+</LI>
+
+<LI><A HREF = "book.html"><B>The TLA+ Book</B></A>&nbsp;&nbsp;
+
+This is a real, published book that you can download.&nbsp;  It contains a
+complete description of TLA+ and the TLC model checker at the time of
+its publication.&nbsp;  The first 90 or so pages are all that most engineers
+will want to read.&nbsp;  There have been changes to the TLA+ language since
+then--the major changes being the addition of constructs for writing
+proofs.&nbsp;  These changes are described <a href="tla2.html">here</a>.
+
+</LI>
+
+<LI><A HREF = "https://github.com/tlaplus/Examples">TLA+ 
+Examples</A>&nbsp;&nbsp; A somewhat random collection of example TLA+
+specifications.
+
+</LI>
+<LI><A HRE
+F = "pluscal.html">PlusCal</A>&nbsp;&nbsp; See the 
+<A HREF = "pluscal.html">PlusCal web page</A> for documents that
+describe the PlusCal algorithm language.
+
+<LI><A HREF="http://tla.msr-inria.inria.fr/tlaps">
+       TLAPS</A>&nbsp;&nbsp;
+The TLAPS web site is currently the best place to go to find out how
+to use the proof system.
+
+<LI><A HREF = "summary-standalone.pdf">Summary of TLA+</A>&nbsp;&nbsp; A 7-page "cheat sheet" 
+that compactly describes all of the TLA+ language and definitions
+from the standard modules.
+</LI>
+<LI><A HREF="papers.html">Lamport's TLA Papers</a>&nbsp;&nbsp;
+  This web page lists almost everything Leslie Lamport has written
+about TLA.&nbsp;  It includes some helpful introductory material.
+</LI>
+
+<LI><A HREF="other-papers.html">Other TLA Links</a>&nbsp;&nbsp;
+  Links to work relevant to TLA not on the TLA+ or TLAPS web sites.
+</LI>
+
+
+
+</UL>
+
+<!-- 
+
+ALMOST EVERYTHING BELOW HERE CONSISTS OF THE PREVIOUS CONTENTS
+COMMENTED OUT, KEPT AROUND IN CASE THEY CONTAIN SOMETHING USEFUL.
+
+
+The <b>TLA Toolbox</b>, an IDE 
+ <FONT size=-1>(integrated development environment)</FONT>
+for the TLA+ Tools, is now available <A HREF =
+"toolbox.html"><B>here</B></A>.
+
+<p>
+
+There is now a <b>TLA User Community</b> web page <A HREF =
+"http://www.tlaplus.net/"><B>here</B></A>.
+
+<p>
+
+The TLA+ Hyperbook, a work in prog
+ress, is available&nbsp;
+<A HREF = "hyperbook.html"><B>here</B></A>.
+
+<p>
+
+The&nbsp;  TLA+&nbsp; book&nbsp; is&nbsp; available&nbsp;
+<A HREF = "book.html"><B>here</B></A>.
+
+<P>
+The&nbsp; TLA+&nbsp; tools&nbsp; are&nbsp; available&nbsp;
+<A HREF = "tools.html"><B>here</B></A>.
+</FONT>
+<HR>
+
+
+
+<H2>What is TLA?</H2> 
+
+
+<P> TLA (the Temporal Logic of Actions) is a logic for specifying and
+reasoning about concurrent and reactive systems.&nbsp;&nbsp;    
+
+It is the basis for TLA+, a complete specification language.
+
+<P> This Web page will be updated to reflect new work on TLA.&nbsp;&nbsp;  
+
+I hope that all work on TLA and TLA tools will be accessible from
+here.&nbsp;&nbsp;    
+
+If you want to be notified of changes to this page, or if you
+want your work to be represented here, please send e-mail to
+<A HREF ="../index.html">Leslie Lamport</A>.
+
+
+
+<HR>
+
+<H2>About TLA and TLA+</H2>
+
+<DL> <DT> <B><A HREF = "http://www.hpl.hp.com/techreports/Compaq-DEC/SRC-TN-1994-001.html">Introduction to TLA</B></A> <BR> 
+      Leslie Lamport<BR>
+      <I>16 December 1994</I>
+      <DD> A short (7-page) introduction to what TLA formulas mean.
+       It should allow you to understand TLA specifications.<P>
+
+
+<DT> <B>A Summary of TLA+</B> 
+
+<DD> This is a 7-page "cheat sheet" that briefly describes all the
+constructs and built-in operators of TLA+ and the operators defined in
+the common standard modules, and that lists the user-definable
+operator symbols and the ascii representations of symbols.<BR>
+ <A HREF = "summary.ps">Postscript (300K) </A> - 
+ <A HREF = "summary.ps.Z">Compressed Postscript (170K) </A> - 
+ <A HREF = "summary.pdf">PDF (120K)</A> <P>
+
+<DT> <B>PODC 2000 Tutorial Handout </B> 
+
+<DD> This is the handout from the TLA+ tutorial at PODC 2000.&nbsp;&nbsp;  
+It will be meaningful only to people who attended the tutorial.
+ <A HREF = "podc00-handout.ps">Postscript (300K) </A> - 
+ <A HREF = "podc00-handout.ps.Z">Compressed Postscript (170K) </A> - 
+ <A HREF = "podc00-handout.pdf">PDF (120K)</A> 
+<P>
+
+<DT> <B><A HREF = "wildfire-challenge.html">
+The Wildfire Verification Challenge Problem</A></B>
+
+<DD> This challenge poses the problem of finding a bug in a system
+formally specified with TLA+.&nbsp;&nbsp;  
+It is also a good example of a TLA+ specification of a realistic
+system.
+
+<P>
+
+<DT> <A HREF = "papers.html"><B>TLA Papers</B></A> 
+<DD> The current corpus--all relevant papers and notes
+by Leslie Lamport and friends that are about TLA or use TLA.<P>
+
+</DL>
+
+
+<HR>
+<H2>Related Issues</H2>
+<DL> 
+<DT> <A HREF = "../proofs/proofs.html"><B>Proofs</B></A>
+     <DD> About writing mathematical proofs.<P>
+<DT> <A HREF = "../latex/latex.html"><B>Useful LaTeX Style Files</B></A>
+     <DD> For writing in and about TLA.<P>
+<DT> <B><A HREF = "http://www.hpl.hp.com/techreports/Compaq-DEC/SRC-RR-147.html">
+Should Your Specification Language Be Typed?
+</B></A><BR> 
+      Leslie Lamport and Lawrence C. Paulson<BR>
+      <I>1 May 1997</I>
+  <DD> A discussion of types in specification languages that
+       should explain why TLA+ is untyped. (To appear in
+       <I>ACM TOPLAS</I>.)<P>
+
+<DT> <B> <A HREF = "logic-calculators.html">Logic Calculators
+          </B></A>
+     <DD> Check it out.<BR><P>
+
+</DL>
+<HR>
+<H2>Work on TLA Outside Compaq and Microsoft</H2>
+
+<H3>Papers</H3>
+<DL>
+<DT>  <A HREF = "ftp://ftp.dcs.warwick.ac.uk/people/Sara.Kalvala/tla.ps">
+       "A formulation of TLA in Isabelle"--
+        Sara Kalvala</A><P>
+
+<DT>  <A HREF = "  http://techreports.library.cornell.edu:8081/Dienst/UI/1.0/Display/cul.cs/TR94-1409">
+       "Reasoning About Programs by Exploiting the Environment"--
+        Limor Fix and Fred B. Schneider</A><P>
+
+</DL>
+
+<BR>
+
+<H3>Links to Other Groups and Projects</H3>
+<DL>
+
+
+
+<DT> <B> <A HREF = "http://www.cs.unh.edu/~charpov/Teaching/CS-986/TLC/">
+          Case Study in TLA+ / TLC</B></A></B>
+  <DD> Examples created by Michel Charpentier for a course he gave on 
+       program verification.
+<P>
+
+
+<DT> <B> <A HREF = "http://www.loria.fr/~merz/">
+          Stephan Merz</B></A></B>
+  <DD> A page containing several papers on TLA by Stephan Merz, as well as
+      a link to 
+   <A HREF = 
+      "http://www.pst.informatik.uni-muenchen.de/~merz/isabelle/index.html">Isabelle/TLA</A>, 
+  Merz's encoding of TLA in the higher-order logic of the generic interactive 
+  theorem prover Isabelle. (That page includes a machine-checked proof of 
+      <A HREF = "../dagstuhl/dagstuhl.html">
+       The Dagstuhl RPC-Memory Example</A>.)<P>
+
+<P>
+
+<DT>  <A HREF = "http://www.rvs.uni-bielefeld.de/publications/abstracts.html#TLA"> Work With and On TLA </A>.
+ <DD> Publications by
+      the Networks and Distributed Systems group at the University of
+      Bielefeld, headed by
+      Peter Ladkin
+<P>
+
+<DT>  <A HREF = "http://disco.cs.tut.fi/">
+          The DisCo Home Page</A>
+   <DD>Disco is a  specification language developed by Reino Kurki-Suonio
+       at the University of Tampere in Finland.<P>
+
+<DT> <A HREF = 
+           "http://ls4-www.informatik.uni-dortmund.de/RVS/P-TLA/welcome.html">
+          Tools for TLA based specifications</A>
+         <DD> This page describes work done at the University
+              of Dortmund, Department of Computer Science by the
+              Computer Networks and Distributed Systems group
+              headed by Dr. Heiko Krumm. <P>
+
+<DT> <A HREF = "http://ww
+w.brics.dk/~urban/tlp/tlp.html">
+            TLP</A>
+          <DD> TLP is a system for mechanically checking TLA proofs.
+               It was developed primarily by Urban Engberg 
+                (<KBD>ue@ccieurope.com</KBD>) when he was a
+              doctoral student at Aarhus University, with help from
+               Peter Gr&oslash;nning.  The page has not been updated
+               since 1995, but the program should still work.
+              (It uses an obsolete version of the LP theorem prover,
+              which is available from the site.  It also has Emacs
+              macros that were written for an old version of Emacs
+              and may or may not work with newer versions.)
+              A TLA+ proof system is currently being developed that
+              will make TLP completely obsolete.
+
+</DL>
+
+<P> 
+<HR>
+<P>
+In 2000, this page was visited
+about <B>33500</B> times from <B>8000</B> different hosts.
+
+<BR>
+
+In 1999, this page was visited
+about <B>31100</B> times from <B>8000</B> different hosts.
+
+<BR>
+
+In 1998, this page was visited
+about <B>18400</B> times from <B>5300</B> different hosts.
+
+<BR>
+
+In 1997, this page was visited
+about <B>19000</B> times from <B>5600</B> different hosts.
+
+<BR>
+
+In 1996, this page was visited
+about <B>18800</B> times from <B>5300</B> different hosts.
+
+-->
+
+</font>
+
+</table>
+
+_______________<A HREF = "http://jasonlamport.com">_____</A>___________________________________________________________________
+
+<table width="700">
+<font style="font-family:Calibri,Trebuchet MS,Verdana">
+<small> 
+<br>
+This page can be found by searching the Web for the 21-letter 
+string
+  <tt>uidlamporttlahomepage</tt>.
+Please do not put this string in any document that could wind up on
+the web--including email messages and pdf and Word documents.
+You can refer to it in Web documents as "the string obtained by
+removing the <tt>-</tt> from
+  <tt>uid-lamporttlahomepage</tt>".
+</small>
+</table>
+</font>
+
+<!--footer code begin
+<div style="font-family: Verdana; width:1002px; height:25px; padding-top:5px; font-size:60%;">
+<a href="http://research.microsoft.com/c/1060" style="border-right:1px solid #bbb; padding:0em 1em 0em 0em;">Contact Us</a>
+<a href="http://research.microsoft.com/c/1061" style="border-right:1px solid #bbb; padding:0em 1em 0em 1em;">Terms of Use</a>
+<a href="http://research.microsoft.com/c/1062" style="border-right:1px solid #bbb; padding:0em 1em 0em 1em;">Trademarks</a>
+<a href="http://research.microsoft.com/c/1063" style="padding:0em 1em 0em 1em;">Privacy Statement</a>
+<span style="margin-right:100px;">&copy;2010 Microsoft Corporation. All right

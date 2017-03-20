@@ -1,0 +1,74 @@
+// ! il faut prendre le host sur la ligne HOST
+	// defois il est marque dans l'adresse de la requette /!\....
+	int port = 80;
+
+	// debut ====================================================
+
+	int serverSocket, servlen, n, retread;
+	struct sockaddr_in  serv_addr;
+	char fromServer[MAXLINE];
+	char fromUser[MAXLINE];
+	struct hostent *hp;  
+
+	/* 
+	* Remplir la structure  serv_addr avec l'adresse du serveur 
+	*/
+	memset ( (char *) &serv_addr, 0, sizeof(serv_addr) );
+	serv_addr.sin_family = PF_INET;
+
+	//La fonction htonl()  convertit  un  entier  long  hostlong depuis  l'ordre des octets de l'hôte vers celui du réseau.
+	//serv_addr.sin_port = htons(atoi(argv[2]));
+	serv_addr.sin_port = htons(port);
+	hp = (struct hostent *)gethostbyname ("lamport.azurewebsites.net");
+	if (hp == NULL) {
+		fprintf(stderr, "%s non trouve dans in /etc/hosts ou dans le DNS\n", "lamport.azurewebsites.net" );
+		exit(1);
+	}
+
+	serv_addr.sin_addr = * ((struct in_addr *)(hp->h_addr));
+	printf ("IP address: %s\n", inet_ntoa (serv_addr.sin_addr));
+
+
+	/*
+	* Ouvrir socket (socket STREAM)
+	*/
+	printf ("socketing\n");	
+	if ((serverSocket = socket(PF_INET, SOCK_STREAM, 0)) <0) {
+		perror ("erreur socket");
+		exit (1);
+	}
+
+	/*
+	* Connect to the serveur 
+	*/
+	printf ("Connecting...\n");
+	if (connect (serverSocket, (struct sockaddr *) &serv_addr, sizeof(serv_addr) ) < 0){
+		perror ("erreur connect");
+		exit (1);
+	}
+
+	printf ("Entering while\n");
+	while ( (retread = readline (serverSocket, fromServer, MAXLINE)) > 0){
+		printf ("corr: %s\n", fromServer);
+		if (strcmp (fromServer,"Au revoir\n") == 0) 
+			break ; /* fin de la lecture */
+
+		/* saisir message utilisateur */
+		printf("vous: ");
+		if (fgets(fromUser, MAXLINE,stdin) == NULL) {
+			perror ("erreur fgets \n");
+			exit(1);
+		}
+
+		/* Envoyer le message au serveur */
+		if ( (n=(serverSocket, fromUser, strlen(fromUser)) ) != strlen(fromUser))  {
+			printf ("erreur writen");
+			exit (1);
+		}
+	}
+	if(retread < 0 ) {
+		perror ("erreur readline \n");
+		exit(1);
+	}
+
+	close(serverSocket);
