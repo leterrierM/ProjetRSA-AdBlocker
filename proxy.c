@@ -15,18 +15,25 @@
 #define MAXLINE 80
 #define CHUNK_SIZE 512
 
-#define MAXREQUESTSIZE 2048
+#define MAXREQUESTSIZE 4096
 //#define MAXHTMLSIZE 10485760 //10Mo (en moyenne html = 2Mo) // segfault si trop haut....
 #define MAXHTMLSIZE 5242880 //5Mo
 int i;
 
-/* =============================================== strRequest =============================================== */
-int strRequest(int sockfd){
+/* ============================================ HANDLECLIENT ============================================ */
+int handleClient(int sockfd){
+	// Si le client se deconnecte, on renvoit 0
+
 	// contient le nb d'octet lu => pointe juste apres le dernier caractere dans msg on peut donc y mettre \0
 	int nrcv;
 	int nsnd;
 	char clientRequest[MAXREQUESTSIZE];
-	//On lit le msg du client et on le range dans msg
+
+	printf("DEBUG Proxy: Debut du traitement ================================\n");
+
+
+
+	//On lit le msg du client et on le range dans clientRequest
 	printf("DEBUG Proxy: Debut de recuperation de la requette du client\n");
 	memset( (char*) clientRequest, 0, sizeof(clientRequest) );
 	if ( (nrcv = read ( sockfd, clientRequest, sizeof(clientRequest)-1) ) < 0 )  {
@@ -38,35 +45,11 @@ int strRequest(int sockfd){
 	printf("DEBUG Proxy: Message de taille %d recu sur le socket %d du processus %d  !\n",nrcv,sockfd,getpid());
 	printf("DEBUG Proxy: Debut du message de la socket %d :\n",sockfd);
 	printf("%s",clientRequest);
-	printf("DEBUG Proxy: Fin du message ===================\n\n");
+	printf("DEBUG Proxy: Fin du message === \n\n");
 
 
-	printf("DEBUG Proxy: Parsing to get host...\n");
 
-	// On parse avec espace et on recupe le 5 token car il nous faut le host
-	char *token;
-	const char delimiter[] = " \r\n";
-	char* host; // Token 5
-	// on copie la requette sinon elle est modifiee par strtok
-	char clientRequestCopy[MAXREQUESTSIZE];
-	strcpy(clientRequestCopy,clientRequest);
-	// On recupere split[0] dans token
-	token = strtok(clientRequestCopy, delimiter);
-
-	i = 0;
-	// Token contient split[i] successivement jusqu'au dernier ou il vaut null
-	while( token != NULL ){
-		//printf( "%s / %d\n", token, strlen(token) );
-		if(i == 4){
-			host = (char*)malloc(strlen(token)*sizeof(char));
-			host = token;
-			//printf("saving token : | %s |\n",host);
-		}
-		token = strtok(NULL, delimiter);
-		i++;
-	}
-	printf("DEBUG Proxy: Parsing (%s) OK!\n",host);
-
+	printf("DEBUG Proxy: Sauvegarde du message dans un fichier\n");
 	char fileName[32];
 	sprintf(fileName,"TMP_clientRequest_%d.txt",sockfd);
 	FILE *frequest = fopen(fileName, "w");
@@ -87,8 +70,10 @@ int strRequest(int sockfd){
 		exit (1);
 	}
 	frequest = NULL;
-	
+	printf("DEBUG Proxy: Sauvegarde terminÃ©e\n\n");
 	//printf("DEBUG Proxy: Fin de recuperation de la requette du client\n\n");
+
+
 
 	// on retourne direct si le client se deco 
 	if(nsnd == 0){
@@ -96,37 +81,63 @@ int strRequest(int sockfd){
 		return nsnd;
 	}
 
-	/*
-	// Si c'est pas un get on quitte (comme pour un deco)
-	char* isGet = strstr(clientRequest,"GET");
-	if(nsnd == 0){
-		printf("DEBUG Proxy: not a GET! (isGet : %s)\n",isGet);
+	// Si c'est un connect on quitte (comme pour un deco)
+	char* isGet = strstr(clientRequest,"CONNECT");
+	if(isGet != NULL){
+		printf("DEBUG Warning: CONNECT n'est pas implementÃ©! (isGet : %s)\n",isGet);
 		return 0;
 	}
-	*/
+
+
+
+	printf("DEBUG Proxy: Parsing to get host...\n");
+	char *token;
+	const char delimiter[] = " \r\n";
+	char* host;
+	// on copie la requette sinon elle est modifiee par strtok
+	char clientRequestCopy[MAXREQUESTSIZE];
+	strcpy(clientRequestCopy,clientRequest);
+	// On recupere split[0] dans token
+	token = strtok(clientRequestCopy, delimiter);
+
+	i = 0;
+	// Token contient split[i] successivement jusqu'au dernier ou il vaut null
+	while( strcmp(token, "Host:") != 0){
+		//printf( "%s / %d\n", token, strlen(token) );
+		token = strtok(NULL, delimiter);
+		i++;
+	}
+	token = strtok(NULL, delimiter);
+	host = (char*)malloc(strlen(token)*sizeof(char));
+	host = token;
+	
+	printf("DEBUG Proxy: Parsing (%s) OK!\n\n",host);
+
+	
+
 	int tcpSocket = socket(AF_INET, SOCK_STREAM, 0);
 	struct hostent* hostServeur;
 	struct sockaddr_in serveraddr;
 
 	printf("DEBUG Proxy: Creation de la socket TCP...\n");
-	
 	if (tcpSocket < 0){
 		printf("ERROR Proxy: Erreur lors de la creation de la socket TCP!\n");
 		exit (1);
 	}else{
 		printf("DEBUG Proxy: Creation de la socket TCP : OK!\n");
 	}
+
 	printf("DEBUG Proxy: Recherche de %s...\n",host);
 	char hostConst[500];
 	strcpy(hostConst, host);
-	hostServeur = (struct hostent *)gethostbyname("lamport.azurewebsites.net");
+	hostServeur = (struct hostent *)gethostbyname(host);
 	if (hostServeur == NULL)
 	{
 		printf("ERROR Proxy: Erreur lors de la recherche de %s! (Pas d'internet?)\n", host);
 		exit(1);
 	}else{
 		printf("DEBUG Proxy: Connexion a %s : OK!\n",host);
-		printf("============================\n");
+		printf("------------------------\n");
 		printf("%s = ", hostServeur->h_name);
 		unsigned int j = 0;
 		while (hostServeur -> h_addr_list[j] != NULL)
@@ -134,7 +145,7 @@ int strRequest(int sockfd){
 			printf("%s\n", inet_ntoa(*(struct in_addr*)(hostServeur -> h_addr_list[j])));
 			j++;
 		}
-		printf("============================\n");
+		printf("------------------------\n");
 	}
 
 	bzero((char *) &serveraddr, sizeof(serveraddr));
@@ -153,9 +164,9 @@ int strRequest(int sockfd){
 	}
 	
 	printf("REQUETE :\n");
-	printf("============================\n");
+	printf("------------------------\n");
 	printf("%s\n\n%d\n", clientRequest, (int)strlen(clientRequest));
-	printf("============================\n");
+	printf("------------------------\n");
 	printf("DEBUG Proxy: Envoi de la requete HTTP...\n");
 	if (send(tcpSocket, clientRequest, strlen(clientRequest), MSG_CONFIRM) < 0){
 		printf("ERROR Proxy: Erreur lors de l'envoi de la requete HTTP !\n");
@@ -164,9 +175,9 @@ int strRequest(int sockfd){
 		printf("DEBUG Proxy: Envoi de la requete HTTP : OK!\n");
 	}
 
+
 	//TODO recv ====================================
 	printf("DEBUG Proxy: Reception du contenu HTML!\n");
-
 	char fileNameHTML[32];
 	sprintf(fileNameHTML,"TMP_HTML_%d.txt",sockfd);
 	FILE *fhtml = fopen(fileNameHTML, "w");
@@ -201,12 +212,12 @@ int strRequest(int sockfd){
 	
 	//fermeture de la co avec l'host
 	close(tcpSocket);
-
 	printf("DEBUG Proxy: Fin reception du contenu HTML!\n\n");
 
-	printf("===============================================\n");
+	printf("DEBUG Proxy: Reponse HTML:\n");
+	printf("------------------------\n");
 	printf("%s\n",reponseHTML);
-	printf("===============================================\n\n");
+	printf("------------------------\n");
 
 	// renvoie de la page auclient
 	printf("DEBUG Proxy: Envoi du contenu HTML!\n");
@@ -219,15 +230,15 @@ int strRequest(int sockfd){
 
 	printf("DEBUG Proxy: Fin envoi du contenu HTML!\n\n");
 
+	printf("DEBUG Proxy: Fin du traitement! ================================\n\n\n");
+
 	return nsnd;
 }
 
-
+/* ================================================ HELP ================================================ */
 void showHelp(){
 	printf("HELP Proxy : Proxy <n_Port>\n");
 }
-
-
 
 /* ================================================ MAIN ================================================ */
 int main(int argc,char *argv[]){
@@ -304,7 +315,7 @@ int main(int argc,char *argv[]){
 		nbfd = select(maxfdp1, &pset, NULL, NULL, NULL);
 
 		// vrai si sockfd est dans pset
-		// sockfd c'est le socket de dialogue du listen => si il est activé ya un nouveau client
+		// sockfd c'est le socket de dialogue du listen => si il est activÃ© ya un nouveau client
 		if( FD_ISSET(sockfd, &pset) ){
 			// Une demande de connection a ete emise par un client
 			clilen = sizeof(cli_addr);
@@ -331,15 +342,15 @@ int main(int argc,char *argv[]){
 			nbfd--;
 		}
 
-		//Parcourir le tableau des clients connectés
+		//Parcourir le tableau des clients connectÃ©s
 		i = 0;
 		while( (nbfd > 0) && (i < FD_SETSIZE) ){
 			// Le client demande qqch
 			if( ((sockcli = tab_clients[i]) >= 0) && (FD_ISSET(tab_clients[i], &pset)) ){
-				//ici on traite les données du client
+				//ici on traite les donnÃ©es du client
 				//le client ferme sa co
-				//dans strRequest ou on fait proxy -> server -> proxy -> client
-				if( strRequest(sockcli) == 0 ){
+				//dans handleClient ou on fait proxy -> server -> proxy -> client
+				if( handleClient(sockcli) == 0 ){
 					close(tab_clients[i]);
 					tab_clients[i] = -1;
 					FD_CLR(sockcli, &rset);
@@ -351,5 +362,3 @@ int main(int argc,char *argv[]){
 		}
 	}
 }
-
-
