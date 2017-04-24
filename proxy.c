@@ -119,7 +119,6 @@ int main(int argc,char *argv[]){
 			}
 			else
 			{
-
 				printf("DEBUG Proxy: Requete\n");
 				printf("%s\n",clientRequest);
 				printf("DEBUG Proxy: End Requetten");
@@ -173,12 +172,19 @@ int main(int argc,char *argv[]){
 				printf("got cookie !\n");
 
 				//Connection a l'host
-				/*if(strstr(host, "ad") != NULL || strstr(host,"bfmtv") != NULL)
+				if(verify_host(get) == 1)
 				{
-					printf("PUB\n");
+					printf("\n\n\n\n\n");
+					printf("000000000   0       0   000000 \n");
+					printf("0       0   0       0   0     0\n");
+					printf("0       0   0       0   0     0\n");
+					printf("000000000   0       0   000000 \n");
+					printf("0           0       0   0     0\n");
+					printf("0           000000000   000000 \n");
+					printf("\n\n\n\n\n");
 				}
 				else
-				{*/
+				{
 					printf("connecting to host %s !\n",host);
 					hostStruct = gethostbyname(host);
 					if (hostStruct == NULL)
@@ -247,7 +253,7 @@ int main(int argc,char *argv[]){
 						close(newsockfd1);
 				
 					}
-				//}
+				}
 				printf("freeing get\n");
 				free(get);
 				printf("freeing host\n");
@@ -262,4 +268,48 @@ int main(int argc,char *argv[]){
 	}
 	return 0;
 
+}
+
+
+int verify_host(char* host)
+{
+	char const* const fileName = "tests.txt";
+    	FILE* file = fopen(fileName, "r"); /* should check the result */
+    	char line[256];
+	const char s[2] = "|";
+	char *token;
+   	while (fgets(line, sizeof(line), file)) {
+		printf("%s%s",line,line);
+        	/* note that fgets don't strip the terminating \n, checking its
+           	presence would allow to handle lines longer that sizeof(line) */
+		if(line[0] == '!' /*|| line[0] == '#' || line[0] == '@' || line[0] == '|' || strstr(line, "*") != NULL || strstr(line, "|") != NULL*/)
+		{
+			//on ne fait rien
+		}
+		else
+		{
+/*		
+			char *token;
+   
+			//get the first token 
+			token = strtok(line, s);
+			   
+			// walk through other tokens
+			while( token != NULL ) 
+			{
+				if(strstr(host, token) != NULL)
+					return 1;
+			      	//printf( "%s\n", token );
+			      	token = strtok(NULL, s);
+			}*/
+			if(strstr(host, line) != NULL)
+				return 1;
+		}
+    	}
+    	/* may check feof here to make a difference between eof and io failure -- network
+       timeout for instance */
+
+    	fclose(file);
+
+    	return 0;
 }
