@@ -100,23 +100,25 @@ int main(int argc,char *argv[]){
 
 		printf("DEBUG Proxy: Waiting for the Accept\n");
 		newsockfd = accept(sockfd, (struct sockaddr * ) & cli_addr, & clilen);
-
-
-		bzero((char * ) & clientRequest, sizeof(clientRequest));
-
-		nborcvd = recv(newsockfd, clientRequest, sizeof(clientRequest), 0);
-		// Si c'est un connect on quitte (comme pour un deco)
-
-		isGet = strstr(clientRequest,"CONNECT ");
-		if(isGet != NULL){
-			printf("DEBUG Warning: CONNECT n'est pas implementé! (isGet : %s)\n",isGet);
-		}
-		else if(nborcvd <= 0)
+		
+		//assure la stabilité du proxy
+		if(fork() == 0)
 		{
-			printf("DEBUG Warning: requete non coherente");
-		}
-		else
-		{
+			bzero((char * ) & clientRequest, sizeof(clientRequest));
+
+			nborcvd = recv(newsockfd, clientRequest, sizeof(clientRequest), 0);
+			// Si c'est un connect on quitte (comme pour un deco)
+
+			isGet = strstr(clientRequest,"CONNECT ");
+			if(isGet != NULL){
+				printf("DEBUG Warning: CONNECT n'est pas implementé! (isGet : %s)\n",isGet);
+			}
+			else if(nborcvd <= 0)
+			{
+				printf("DEBUG Warning: requete non coherente");
+			}
+			else
+			{
 
 				printf("DEBUG Proxy: Requete\n");
 				printf("%s\n",clientRequest);
@@ -171,12 +173,12 @@ int main(int argc,char *argv[]){
 				printf("got cookie !\n");
 
 				//Connection a l'host
-				if(strstr(host, "ad") != NULL || strstr(host,"bfmtv") != NULL)
+				/*if(strstr(host, "ad") != NULL || strstr(host,"bfmtv") != NULL)
 				{
 					printf("PUB\n");
 				}
 				else
-				{
+				{*/
 					printf("connecting to host %s !\n",host);
 					hostStruct = gethostbyname(host);
 					if (hostStruct == NULL)
@@ -239,15 +241,13 @@ int main(int argc,char *argv[]){
 									send(newsockfd, html, nbOctetSend, 0);
 							} while (nbOctetSend > 0);
 						}
-
-					       //TODO close
 						printf("freeing sockfd1\n");
 						close(sockfd1);
 						printf("freeing newsockfd1\n");
 						close(newsockfd1);
 				
 					}
-				}
+				//}
 				printf("freeing get\n");
 				free(get);
 				printf("freeing host\n");
@@ -256,7 +256,7 @@ int main(int argc,char *argv[]){
 				free(html);
 				free(requestToSend);*/
 				//free(token);
-			
+			}
 		}
 		close(newsockfd);
 	}
