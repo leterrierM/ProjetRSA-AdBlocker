@@ -1,5 +1,7 @@
+Things To Block:
 /ads
 /ad
+ads
 net/ads
 me/ads
 lazyload-ad
@@ -11,3 +13,4 @@ swf?1&clicktag
 swf?2&clicktag
 streamads
 utils.ads
+offer

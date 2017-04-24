@@ -6,7 +6,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
-
+#include <time.h>
 
 #include <errno.h>
 //pour le client
@@ -171,8 +171,11 @@ int main(int argc,char *argv[]){
 				}
 				printf("got cookie !\n");
 
+
+
+
 				//Connection a l'host
-				if(verify_host(get) == 1)
+				if(verify_host(get) == 1 || verify_host(host) == 1)
 				{
 					printf("\n\n\n\n\n");
 					printf("000000000   0       0   000000 \n");
@@ -182,6 +185,36 @@ int main(int argc,char *argv[]){
 					printf("0           0       0   0     0\n");
 					printf("0           000000000   000000 \n");
 					printf("\n\n\n\n\n");
+					
+					time_t mytime;
+					mytime = time(NULL);
+	
+					char fileName[32];
+					char logs[500];
+					sprintf(fileName,"%s.adlog",host);
+					FILE *fhtml = fopen(fileName, "w");
+					int fdhtml = fileno(fhtml);
+					//sprintf(logFileName, "%s.txt", ctime(&mytime));
+					printf("debug Proxy: opening %s!\n",fileName);
+					if (fhtml == NULL){
+					    printf("ERROR Proxy: Erreur lors de l'ouverture de %s!\n",fileName);
+					    exit(1);
+					}
+					fprintf(logs, "host : %s\n============================================\nget : %s\n",host, get);
+					printf("debug Proxy: writing %s!\n",logs);
+					if ( write (fdhtml, logs, sizeof(logs))  < 0 ) {
+
+						printf("ERROR Proxy: Erreur lors de l'ecriture dans %s!\n",fileName);
+						exit (1);
+					}
+					fflush(fhtml);
+					if ( fclose(fhtml) ){
+						printf("ERROR Proxy: Erreur lors de la fermeture de %s!\n",fileName);
+						exit (1);
+					}
+					fhtml = NULL;
+					
+					fclose(fhtml);
 				}
 				else
 				{
@@ -272,6 +305,30 @@ int main(int argc,char *argv[]){
 
 
 int verify_host(char* host)
+{
+	char *token;
+	char *badHosts;
+	long sizeFile;
+	FILE *fdFile = fopen("tests.txt", "r");
+	fseek(fdFile, 0, SEEK_END);
+	sizeFile = ftell(fdFile);
+	rewind(fdFile);
+	badHosts = malloc(sizeFile * (sizeof(char)));
+	fread(badHosts, sizeof(char), sizeFile, fdFile);
+	fclose(fdFile);
+
+	token = strtok(badHosts,"\r\n");
+
+	while( (token = strtok(NULL,"\r\n")) != NULL){
+		printf("token : %s\n", token);
+		if(strstr(host, token) != NULL){
+			return 1;
+		}
+	}
+	return 0;
+}
+
+int verify_host_OLD(char* host)
 {
 	char const* const fileName = "tests.txt";
     	FILE* file = fopen(fileName, "r"); /* should check the result */
