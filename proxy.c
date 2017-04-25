@@ -18,10 +18,14 @@
 
 /* ================================================ HELP ================================================ */
 void showHelp(){
-	printf("HELP Proxy : Proxy <n_Port>\n");
+	printf("HELP Proxy : Proxy <n_Port> [nom de fichier contenant une liste de mot clef a bloquer]\n");
 }
 
 char adlistFileName[50] = "adList";
+char logFileName[10] = "logs";
+char responseFileName[8] = "response";
+
+char * adRepContent;
 
 /* ============================================= verify_host ============================================ */
 int verify_host(char* host)
@@ -59,11 +63,6 @@ int main(int argc,char *argv[]){
 
 	socklen_t clilen;
 
-	char logFileName[10] = "logs";
-	
-
-	
-
 	// DEBUG d'aide
 	printf("================================ WELCOME to ADBLOCK/PROXY SERVER ================================\n");
 	printf("HELP Proxy : Pour se connecter en client, dans un autre terminal faire 'tellnet localhost n_Port'\n");
@@ -85,6 +84,14 @@ int main(int argc,char *argv[]){
 		showHelp();
 		exit(1);
 	}
+
+	FILE *fdrep = fopen(responseFileName, "r");
+	fseek(fdrep, 0, SEEK_END);
+	int repSize = ftell(fdrep);
+	rewind(fdrep);
+	adRepContent = malloc(repSize * (sizeof(char)));
+	fread(adRepContent, sizeof(char), repSize, fdrep);
+	fclose(fdrep);
 
 	printf("\n");
 
@@ -114,15 +121,15 @@ int main(int argc,char *argv[]){
 
 	bzero((char * ) & cli_addr, sizeof(cli_addr));
 
-
-	const char delimiter_cookie[] = "\r\n";
-	const char delimiter[] = " \r\n";
+	const char delimiter_Retour[] = "\r\n";
+	const char delimiter_EspaceRetour[] = " \r\n";
 
 	char html[500];
 	char buffer[50];
 	char requestToSend[MAXREQUESTSIZE];
 	char clientRequest[MAXREQUESTSIZE];
-	char* isGet;
+	char* isConnect;
+	char* isPost;
 	int nborcvd;
 	int nbOctetSend;
 	int sockfd1;
@@ -131,6 +138,8 @@ int main(int argc,char *argv[]){
 	char* cookie ;
 	char* host;
 	char* get;
+	char* postLength;
+	char* postContent;
 	char clientRequestCopy[MAXREQUESTSIZE];
 	struct sockaddr_in host_addr;
 	struct hostent * hostStruct;
@@ -150,9 +159,9 @@ int main(int argc,char *argv[]){
 			nborcvd = recv(newsockfd, clientRequest, sizeof(clientRequest), 0);
 			
 			// On accepte pas les CONNECTs
-			isGet = strstr(clientRequest,"CONNECT ");
-			if(isGet != NULL){
-				printf("DEBUG Warning: CONNECT n'est pas implementé! (isGet : %s)\n",isGet);
+			isConnect = strstr(clientRequest,"CONNECT ");
+			if(isConnect != NULL){
+				printf("DEBUG Warning: CONNECT n'est pas implementé! (isGet : %s)\n",isConnect);
 				close(newsockfd);
 				exit(2);
 			}
@@ -163,7 +172,7 @@ int main(int argc,char *argv[]){
 				exit(3);
 			}else if(nborcvd == 0)
 			{
-				printf("DEBUG Warning: Deconnexion du client\n");
+				printf("DEBUG Warning: Deconnexion du client %d\n",newsockfd);
 				close(newsockfd);
 				exit(0);
 			}
@@ -179,20 +188,20 @@ int main(int argc,char *argv[]){
 				// Copie la requette, sinon elle est modifiee par strtok
 				strcpy(clientRequestCopy,clientRequest);
 				// On recupere split[0] dans token, on split avec " \r\n" => il y a deux delimiteurs
-				token = strtok(clientRequestCopy, delimiter);
+				token = strtok(clientRequestCopy, delimiter_EspaceRetour);
 
 				// Token contient split[i] successivement jusqu'au dernier, ou il vaut NULL
 				// On cherche le token qui vaut "Host: "
 				while( strcmp(token, "Host:") != 0){
 					//printf( "%s / %d\n", token, strlen(token) );
-					token = strtok(NULL, delimiter);
+					token = strtok(NULL, delimiter_EspaceRetour);
 				}
 				// Lorsque on le trouve on sait que le token suivant est la valeur du host
-				token = strtok(NULL, delimiter);
+				token = strtok(NULL, delimiter_EspaceRetour);
 				host = (char*)malloc(strlen(token)*sizeof(char));
 				strcpy(host,token);
 				// Reset de la fonction strtok
-				while( strtok(NULL, delimiter) != NULL){
+				while( strtok(NULL, delimiter_EspaceRetour) != NULL){
 				}
 				printf("DEBUG Proxy: Parsing host : (%s)\n\n",host);
 
@@ -201,17 +210,16 @@ int main(int argc,char *argv[]){
 
 				printf("DEBUG Proxy: Parsing to get (GET,POST,CONNECT path HTTP/1.1)...\n");
 				// La premiere ligne 
-				token = strtok(clientRequestCopy, delimiter_cookie);
+				token = strtok(clientRequestCopy, delimiter_Retour);
 	
-				
-
 				get = (char*)malloc(strlen(token)*sizeof(char));
 				strcpy(get,token);
 				printf("DEBUG Proxy: Parsing get (%s)\n\n",get);
 
 				printf("DEBUG Proxy: Parsing to get cookie...\n");
 				while(token !=NULL){
-					token = strtok(NULL, delimiter_cookie);
+					
+					token = strtok(NULL, delimiter_Retour);
 					if(token !=NULL && strstr(token, "Cookie: ") != NULL)
 					{
 						if(cookie != NULL)
@@ -222,16 +230,44 @@ int main(int argc,char *argv[]){
 				}
 				printf("DEBUG Proxy: Parsing Cookie (%s)\n\n",cookie);
 
+				isPost = strstr(clientRequest,"POST ");
+				if(isPost != NULL){
+					printf("DEBUG Proxy: POST requette detectée ! Recuperation du contenu et de sa taille...\n");
+					// Copie
+					strcpy(clientRequestCopy,clientRequest);
 
+					// La derniere ligne 
+					token = strtok(clientRequestCopy, delimiter_Retour);
+	
+					printf("DEBUG Proxy: Parsing to get cookie...\n");
+					while(token !=NULL){
+						postContent = (char*)malloc(strlen(token)*sizeof(char));
+						strcpy(postContent,token);
+						token = strtok(NULL, delimiter_Retour);
+						if(token !=NULL && strstr(token, "Content-Length: ") != NULL)
+						{
+							if(cookie != NULL)
+								free(postLength);
+							postLength = (char*)malloc(strlen(token)*sizeof(char));
+							strcpy(postLength,token);
+						}
+					}
+					printf("DEBUG Proxy: POST requette detectée ! Recuperation du %s et de sa %s...\n",postContent,postLength);
+				}
+
+
+				
+
+				bzero((char * ) & clientRequestCopy, sizeof(clientRequestCopy));
 
 
 				// Verification si la requette pourrait contenir une pub
 				// On compare l'hote et le chemin de la requette a une base de données en fichier texte
 				if(verify_host(get) == 1 || verify_host(host) == 1)
 				{
-					printf("DEBUG Proxy: Ad detected!\n");
+					printf("DEBUG Proxy: PUB detectée!\n");
 					
-					printf("DEBUG Proxy: Logging ad's request !\n\n");
+					printf("DEBUG Proxy: Sauvegarde de la requette publicitaire !\n\n");
 
 					time_t mytime;
 					mytime = time(NULL);
@@ -250,8 +286,10 @@ int main(int argc,char *argv[]){
 						printf("ERROR Proxy: Erreur lors de la fermeture de logs.log!\n%s\n", strerror(errno));
 						exit (1);
 					}
-					fclose(fLogFile);
 					fLogFile = NULL;
+
+					send(newsockfd, adRepContent, sizeof(adRepContent), 0);
+
 				}
 				else
 				{
@@ -295,10 +333,19 @@ int main(int argc,char *argv[]){
 						printf("DEBUG Proxy: Simplification de la requette :\n");
 						bzero((char * ) requestToSend, sizeof(requestToSend));
 
-						if(cookie != NULL)
-							sprintf(requestToSend, "%s\r\nHost: %s\r\n%s\r\nConnection: close\r\n\r\n", get, host,cookie);
-						else
-							sprintf(requestToSend, "%s\r\nHost: %s\r\nConnection: close\r\n\r\n", get, host);
+						if(isPost == NULL){
+							if(cookie != NULL){
+								sprintf(requestToSend, "%s\r\nHost: %s\r\n%s\r\nUser-Agent: Proxy\r\nConnection: close\r\n\r\n", get, host,cookie);
+							}else{
+								sprintf(requestToSend, "%s\r\nHost: %s\r\nUser-Agent: Proxy\r\nConnection: close\r\n\r\n", get, host);
+							}
+						}else{
+							if(cookie != NULL){
+								sprintf(requestToSend, "%s\r\nHost: %s\r\n%s\r\nUser-Agent: Proxy\r\nConnection: close\r\n%s\r\n\r\n%s\r\n", get, host, cookie, postLength, postContent);
+							}else{
+								sprintf(requestToSend, "%s\r\nHost: %s\r\nUser-Agent: Proxy\r\nConnection: close\r\n%s\r\n\r\n%s\r\n", get, host, postLength, postContent);
+							}
+						}
 						printf("%s", requestToSend);
 						printf("=======================================\n\n");
 
@@ -312,7 +359,7 @@ int main(int argc,char *argv[]){
 							exit (1);
 						}
 						else {
-							printf("DEBUG Proxy: Debut de Transmission");
+							printf("DEBUG Proxy: Debut de Transmission\n");
 							do {
 								bzero((char * ) html, sizeof(html));
 								
@@ -332,10 +379,10 @@ int main(int argc,char *argv[]){
 				free(host);
 			}
 			close(newsockfd);
-			exit(0);
-		} else {
+			_exit(0);
+		} else { // fork() != 0 => pere
 			close(newsockfd);
 		}
-	}
+	} // END WHILE
 	return 0;
 }

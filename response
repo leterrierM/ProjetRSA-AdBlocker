@@ -1,0 +1,7 @@
+HTTP/1.1 200 OK
+Content-Type: text/html
+Connection: Closed
+
+<div style="background-color: red; height: 100%; width: 100%;">
+pub
+</div>
