@@ -1,9 +1,0 @@
-GET http://kxs.fr/k/images/tissu.png HTTP/1.1
-Host: kxs.fr
-User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:28.0) Gecko/20100101 Firefox/28.0
-Accept: image/png,image/*;q=0.8,*/*;q=0.5
-Accept-Language: fr,fr-fr;q=0.8,en-us;q=0.5,en;q=0.3
-Accept-Encoding: gzip, deflate
-Referer: http://kxs.fr/k/style/style.css
-Connection: keep-alive
-

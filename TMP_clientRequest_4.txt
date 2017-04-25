@@ -1,9 +1,0 @@
-GET http://pagead2.googlesyndication.com/pagead/show_ads.js HTTP/1.1
-Host: pagead2.googlesyndication.com
-User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:28.0) Gecko/20100101 Firefox/28.0
-Accept: */*
-Accept-Language: fr,fr-fr;q=0.8,en-us;q=0.5,en;q=0.3
-Accept-Encoding: gzip, deflate
-Referer: http://www.kaakook.fr/citation-2618
-Connection: keep-alive
-
