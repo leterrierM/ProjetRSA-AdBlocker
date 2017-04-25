@@ -9,6 +9,7 @@
 #include <time.h>
 
 #include <errno.h>
+
 //pour le client
 #include <netdb.h>
 #include <sys/select.h>
@@ -20,36 +21,76 @@ void showHelp(){
 	printf("HELP Proxy : Proxy <n_Port>\n");
 }
 
+char adlistFileName[50] = "adList";
+
+/* ============================================= verify_host ============================================ */
+int verify_host(char* host)
+{
+	char *token;
+	char *badHosts;
+	long sizeFile;
+	FILE *fdFile = fopen(adlistFileName, "r");
+	fseek(fdFile, 0, SEEK_END);
+	sizeFile = ftell(fdFile);
+	rewind(fdFile);
+	badHosts = malloc(sizeFile * (sizeof(char)));
+	fread(badHosts, sizeof(char), sizeFile, fdFile);
+	fclose(fdFile);
+
+	token = strtok(badHosts,"\r\n");
+
+	while( (token = strtok(NULL,"\r\n")) != NULL){
+		if(strstr(host, token) != NULL){
+			printf("DEBUG Proxy: Request contains Token (%s)\n",token);
+			return 1;
+		}
+	}
+	return 0;
+}
+
 /* ================================================ MAIN ================================================ */
 int main(int argc,char *argv[]){
 	
 	int sockfd;
 	int newsockfd;
 
-	int i;
-
 	struct sockaddr_in serv_addr;
 	struct sockaddr_in cli_addr;
 
 	socklen_t clilen;
 
+	char logFileName[10] = "logs";
+	
 
-	// Il faut seulement un numero de port vers lequel ecouter
-	if(argc != 2){
-		showHelp();
-		exit(1);
-	}
+	
 
 	// DEBUG d'aide
 	printf("================================ WELCOME to ADBLOCK/PROXY SERVER ================================\n");
 	printf("HELP Proxy : Pour se connecter en client, dans un autre terminal faire 'tellnet localhost n_Port'\n");
 	printf("HELP Proxy : Pour quitter un client faire 'ctrl+altgr+] => enter => q => enter'\n");
 	printf("HELP Proxy : Pour quitter le serveur (ici) faire 'ctrl+c'\n");
-	printf("=================================================================================================\n");
+	printf("=================================================================================================\n\n");
+
+	// Il faut seulement un numero de port vers lequel ecouter
+	if(argc == 2 ){
+		printf("DEBUG Proxy: Log output into 'logs' file\n");
+		printf("DEBUG Proxy: Blocked ad into 'adList' file\n");
+	}else if(argc == 3){
+		printf("DEBUG Proxy: Log output into 'logs' file\n");
+		strcpy(adlistFileName, argv[2]);
+		printf("DEBUG Proxy: Blocked ad into %s file\n", adlistFileName);
+		printf("WARNING Proxy: First line of the file is ignored !\n");
+		
+	}else{
+		showHelp();
+		exit(1);
+	}
+
+	printf("\n");
 
 	// Creation de la socket de dialogue entre le navigateur et le proxy
 	if ((sockfd = socket(PF_INET, SOCK_STREAM, 0)) <0) {
-		printf("ERROR Proxy: Erreur lors de la creation de la socket de dialogue !\n");
+		printf("ERROR Proxy: Erreur lors de la creation de la socket de dialogue !\n%s\n", strerror(errno));
 		exit (1);
 	}
 
@@ -61,13 +102,13 @@ int main(int argc,char *argv[]){
         serv_addr.sin_addr.s_addr = INADDR_ANY;
 
 	if (bind(sockfd,(struct sockaddr *)&serv_addr, sizeof(serv_addr) ) <0) {
-		printf("ERROR Proxy: Erreur lors du bind, attendre un peu ou utiliser un autre nPort !\n");
+		printf("ERROR Proxy: Erreur lors du bind, attendre un peu ou utiliser un autre nPort !\n%s\n", strerror(errno));
 		exit (1);
 	}
 
 	// Listen
 	if (listen(sockfd, SOMAXCONN) < 0) {
-		printf("ERROR Proxy: Erreur lors du listen !\n");
+		printf("ERROR Proxy: Erreur lors du listen !\n%s\n", strerror(errno));
 		exit (1);
 	}
 
@@ -100,65 +141,75 @@ int main(int argc,char *argv[]){
 
 		printf("DEBUG Proxy: Waiting for the Accept\n");
 		newsockfd = accept(sockfd, (struct sockaddr * ) & cli_addr, & clilen);
-		
-		//assure la stabilité du proxy
+		printf("DEBUG Proxy: Accepting a request on newsockfd : %d\n",newsockfd);
+		// Fork : traitement par le fils de la requette demandée (le pere attend de nouveau une connexion entrante)
 		if(fork() == 0)
 		{
 			bzero((char * ) & clientRequest, sizeof(clientRequest));
 
 			nborcvd = recv(newsockfd, clientRequest, sizeof(clientRequest), 0);
-			// Si c'est un connect on quitte (comme pour un deco)
-
+			
+			// On accepte pas les CONNECTs
 			isGet = strstr(clientRequest,"CONNECT ");
 			if(isGet != NULL){
 				printf("DEBUG Warning: CONNECT n'est pas implementé! (isGet : %s)\n",isGet);
+				close(newsockfd);
+				exit(2);
 			}
-			else if(nborcvd <= 0)
+			else if(nborcvd < 0)
 			{
-				printf("DEBUG Warning: requete non coherente");
+				printf("DEBUG Warning: Requete non coherente\n");
+				close(newsockfd);
+				exit(3);
+			}else if(nborcvd == 0)
+			{
+				printf("DEBUG Warning: Deconnexion du client\n");
+				close(newsockfd);
+				exit(0);
 			}
 			else
 			{
-				printf("DEBUG Proxy: Requete\n");
+				printf("DEBUG Proxy: Affichage de la Requette :\n");
 				printf("%s\n",clientRequest);
-				printf("DEBUG Proxy: End Requetten");
+				printf("=======================================\n\n");
 
-				//parsing
+				// Analyse de la requette pour recuperer le host, les cookies, et la premiere ligne (GET/POST/CONNECT)
 				printf("DEBUG Proxy: Parsing to get host...\n");
-				// on copie la requette sinon elle est modifiee par strtok
+
+				// Copie la requette, sinon elle est modifiee par strtok
 				strcpy(clientRequestCopy,clientRequest);
-				// On recupere split[0] dans token
+				// On recupere split[0] dans token, on split avec " \r\n" => il y a deux delimiteurs
 				token = strtok(clientRequestCopy, delimiter);
 
-				// Token contient split[i] successivement jusqu'au dernier ou il vaut null
+				// Token contient split[i] successivement jusqu'au dernier, ou il vaut NULL
+				// On cherche le token qui vaut "Host: "
 				while( strcmp(token, "Host:") != 0){
 					//printf( "%s / %d\n", token, strlen(token) );
 					token = strtok(NULL, delimiter);
 				}
+				// Lorsque on le trouve on sait que le token suivant est la valeur du host
 				token = strtok(NULL, delimiter);
 				host = (char*)malloc(strlen(token)*sizeof(char));
 				strcpy(host,token);
-
+				// Reset de la fonction strtok
 				while( strtok(NULL, delimiter) != NULL){
 				}
-				printf("DEBUG Proxy: Parsing (%s) OK!\n\n",host);
+				printf("DEBUG Proxy: Parsing host : (%s)\n\n",host);
 
-				
-
+				// Copie
 				strcpy(clientRequestCopy,clientRequest);
-				// On recupere split[0] dans token
 
-		
+				printf("DEBUG Proxy: Parsing to get (GET,POST,CONNECT path HTTP/1.1)...\n");
+				// La premiere ligne 
 				token = strtok(clientRequestCopy, delimiter_cookie);
 	
-				//Recupere la premiere ligne
+				
 
 				get = (char*)malloc(strlen(token)*sizeof(char));
 				strcpy(get,token);
+				printf("DEBUG Proxy: Parsing get (%s)\n\n",get);
 
 				printf("DEBUG Proxy: Parsing to get cookie...\n");
-
-
 				while(token !=NULL){
 					token = strtok(NULL, delimiter_cookie);
 					if(token !=NULL && strstr(token, "Cookie: ") != NULL)
@@ -169,204 +220,122 @@ int main(int argc,char *argv[]){
 						strcpy(cookie,token);
 					}
 				}
-				printf("got cookie !\n");
+				printf("DEBUG Proxy: Parsing Cookie (%s)\n\n",cookie);
 
 
 
 
-				//Connection a l'host
+				// Verification si la requette pourrait contenir une pub
+				// On compare l'hote et le chemin de la requette a une base de données en fichier texte
 				if(verify_host(get) == 1 || verify_host(host) == 1)
 				{
-					printf("\n\n\n\n\n");
-					printf("000000000   0       0   000000 \n");
-					printf("0       0   0       0   0     0\n");
-					printf("0       0   0       0   0     0\n");
-					printf("000000000   0       0   000000 \n");
-					printf("0           0       0   0     0\n");
-					printf("0           000000000   000000 \n");
-					printf("\n\n\n\n\n");
+					printf("DEBUG Proxy: Ad detected!\n");
 					
+					printf("DEBUG Proxy: Logging ad's request !\n\n");
+
 					time_t mytime;
 					mytime = time(NULL);
-	
-					char fileName[32];
-					char logs[500];
-					sprintf(fileName,"%s.adlog",host);
-					FILE *fhtml = fopen(fileName, "w");
-					int fdhtml = fileno(fhtml);
-					//sprintf(logFileName, "%s.txt", ctime(&mytime));
-					printf("debug Proxy: opening %s!\n",fileName);
-					if (fhtml == NULL){
-					    printf("ERROR Proxy: Erreur lors de l'ouverture de %s!\n",fileName);
-					    exit(1);
-					}
-					fprintf(logs, "host : %s\n============================================\nget : %s\n",host, get);
-					printf("debug Proxy: writing %s!\n",logs);
-					if ( write (fdhtml, logs, sizeof(logs))  < 0 ) {
 
-						printf("ERROR Proxy: Erreur lors de l'ecriture dans %s!\n",fileName);
-						exit (1);
-					}
-					fflush(fhtml);
-					if ( fclose(fhtml) ){
-						printf("ERROR Proxy: Erreur lors de la fermeture de %s!\n",fileName);
-						exit (1);
-					}
-					fhtml = NULL;
+					FILE *fLogFile = fopen(logFileName, "a");
 					
-					fclose(fhtml);
+					//printf("DEBUG Proxy: opening %s!\n",fileName);
+					if (fLogFile == NULL){
+						printf("ERROR Proxy: Erreur lors de l'ouverture de logs.log!\n%s\n", strerror(errno));
+						exit (1);
+					}
+
+					fprintf(fLogFile, "===================================================\nDATE : %shost : %s\n===\nget : %s\n",ctime(&mytime), host, get);
+
+					if ( fclose(fLogFile) ){
+						printf("ERROR Proxy: Erreur lors de la fermeture de logs.log!\n%s\n", strerror(errno));
+						exit (1);
+					}
+					fclose(fLogFile);
+					fLogFile = NULL;
 				}
 				else
 				{
-					printf("connecting to host %s !\n",host);
+					//Connection a l'host
+					printf("DEBUG Proxy: Connecting to host : %s !\n\n", host);
 					hostStruct = gethostbyname(host);
 					if (hostStruct == NULL)
 					{
-						printf("ERROR Proxy: Erreur lors de la recherche de %s! (Pas d'internet?)\n", host);
+						printf("ERROR Proxy: Erreur lors de la recherche de %s! (Pas d'internet?)\n%s\n", host, strerror(errno));
+						exit (1);
 					}
 					else{
-						printf("connected to host %s !\n",host);
 						bzero((char * ) & host_addr, sizeof(host_addr));
 				
 						host_addr.sin_family = AF_INET;
 						host_addr.sin_port = htons(80);
-						printf("copying : %s\n",(char * ) hostStruct -> h_addr);
-						fflush(stdout);
+						
+						//printf("copying : %s\n",(char * ) hostStruct -> h_addr);
+						
 						memcpy(  (char * ) & host_addr.sin_addr.s_addr, (char * ) hostStruct -> h_addr, hostStruct -> h_length);
-				
-
 	
 						// Creation de la socket de dialogue le proxy et l'internet
-						printf("Debug Proxy: making socket de dialoguem!\n");
+						printf("DEBUG Proxy: Creation de la socket de dialogue entre le proxy et %s!\n",host);
 						if ((sockfd1 = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP) ) <0) {
-							printf("ERROR Proxy: Erreur lors de la creation de la socket de dialogue deuxieme du nom!\n");
+							printf("ERROR Proxy: Erreur lors de la creation de la socket !\n%s\n", strerror(errno));
+							exit (1);
 						}
-						printf("Debug Proxy: making connect!\n");
+						printf("DEBUG Proxy: Connection a %s!\n",host);
 						newsockfd1 = connect(sockfd1, (struct sockaddr * ) & host_addr, sizeof(struct sockaddr));
-						if (newsockfd1 < 0)
-							printf("Error in connecting to remote server");
-
+						if (newsockfd1 < 0){
+							printf("ERROR Proxy: Erreur lors de la connection au serveur distant\n%s\n", strerror(errno));
+							exit (1);
+						}
 						// Affiche l'ip du host
 				
-						sprintf(buffer, "\nConnected to %s  IP - %s\n", host, inet_ntoa(host_addr.sin_addr));
+						sprintf(buffer, "Connecte a %s  IP - %s\n", host, inet_ntoa(host_addr.sin_addr));
 						printf("\n%s\n", buffer);
 
-						// Creation de la requettttttttttte a envoyer
+						// Creation de la requette a envoyer
 				
-						printf("Debug Proxy: making request!\n");
+						printf("DEBUG Proxy: Simplification de la requette :\n");
 						bzero((char * ) requestToSend, sizeof(requestToSend));
+
 						if(cookie != NULL)
 							sprintf(requestToSend, "%s\r\nHost: %s\r\n%s\r\nConnection: close\r\n\r\n", get, host,cookie);
 						else
 							sprintf(requestToSend, "%s\r\nHost: %s\r\nConnection: close\r\n\r\n", get, host);
-						printf("RrequestToSend\n%s\n", requestToSend);
-	
+						printf("%s", requestToSend);
+						printf("=======================================\n\n");
 
-						printf("Debug Proxy: sending requestS!\n");
+						printf("DEBUG Proxy: Envoi de la requette!\n");
 						nbOctetSend = send(sockfd1, requestToSend, strlen(requestToSend), 0);
 
-				
 						bzero((char * ) html, sizeof(html));
 				
-						printf("sending data\n");
-						if (nbOctetSend < 0)
-							printf("Error writing to socket\n %s\n", strerror(errno));
+						if (nbOctetSend < 0){
+							printf("ERROR Proxy: Erreur lors de l'envoi de la requette!\n%s\n", strerror(errno));
+							exit (1);
+						}
 						else {
+							printf("DEBUG Proxy: Debut de Transmission");
 							do {
 								bzero((char * ) html, sizeof(html));
-								printf("wait for receive %d\n", nbOctetSend);
+								
 								nbOctetSend = recv(sockfd1, html, sizeof(html), 0);
+								printf("DEBUG Proxy: Envoi de %d Octets\n", nbOctetSend);
 								if ( !(nbOctetSend <= 0) )
 									send(newsockfd, html, nbOctetSend, 0);
 							} while (nbOctetSend > 0);
+							printf("DEBUG Proxy: Fin de Transmission");
 						}
-						printf("freeing sockfd1\n");
+						
 						close(sockfd1);
-						printf("freeing newsockfd1\n");
 						close(newsockfd1);
-				
 					}
 				}
-				printf("freeing get\n");
 				free(get);
-				printf("freeing host\n");
-				free(host);/*
-				free(buffer);
-				free(html);
-				free(requestToSend);*/
-				//free(token);
+				free(host);
 			}
-		}
-		close(newsockfd);
-	}
-	return 0;
-
-}
-
-
-int verify_host(char* host)
-{
-	char *token;
-	char *badHosts;
-	long sizeFile;
-	FILE *fdFile = fopen("tests.txt", "r");
-	fseek(fdFile, 0, SEEK_END);
-	sizeFile = ftell(fdFile);
-	rewind(fdFile);
-	badHosts = malloc(sizeFile * (sizeof(char)));
-	fread(badHosts, sizeof(char), sizeFile, fdFile);
-	fclose(fdFile);
-
-	token = strtok(badHosts,"\r\n");
-
-	while( (token = strtok(NULL,"\r\n")) != NULL){
-		printf("token : %s\n", token);
-		if(strstr(host, token) != NULL){
-			return 1;
+			close(newsockfd);
+			exit(0);
+		} else {
+			close(newsockfd);
 		}
 	}
 	return 0;
-}
-
-int verify_host_OLD(char* host)
-{
-	char const* const fileName = "tests.txt";
-    	FILE* file = fopen(fileName, "r"); /* should check the result */
-    	char line[256];
-	const char s[2] = "|";
-	char *token;
-   	while (fgets(line, sizeof(line), file)) {
-		printf("%s%s",line,line);
-        	/* note that fgets don't strip the terminating \n, checking its
-           	presence would allow to handle lines longer that sizeof(line) */
-		if(line[0] == '!' /*|| line[0] == '#' || line[0] == '@' || line[0] == '|' || strstr(line, "*") != NULL || strstr(line, "|") != NULL*/)
-		{
-			//on ne fait rien
-		}
-		else
-		{
-/*		
-			char *token;
-   
-			//get the first token 
-			token = strtok(line, s);
-			   
-			// walk through other tokens
-			while( token != NULL ) 
-			{
-				if(strstr(host, token) != NULL)
-					return 1;
-			      	//printf( "%s\n", token );
-			      	token = strtok(NULL, s);
-			}*/
-			if(strstr(host, line) != NULL)
-				return 1;
-		}
-    	}
-    	/* may check feof here to make a difference between eof and io failure -- network
-       timeout for instance */
-
-    	fclose(file);
-
-    	return 0;
 }
